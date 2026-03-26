@@ -1,65 +1,117 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react'
+import { formSections } from '@/data/formSections'
+import { useFormState } from '@/hooks/useFormState'
+import { formatWhatsAppMessage } from '@/utils/formatMessage'
+import { IntroHeader } from '@/components/IntroHeader'
+import { ProgressBar } from '@/components/ProgressBar'
+import { FormSectionCard } from '@/components/FormSectionCard'
+import { SubmitBar } from '@/components/SubmitBar'
+import { PreviewModal } from '@/components/PreviewModal'
+import { SuccessMessage } from '@/components/SuccessMessage'
 
 export default function Home() {
+  const { formData, updateSection, isFormEmpty, isLoaded } = useFormState()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const whatsappMessage = formatWhatsAppMessage(formData, formSections)
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5511999999999'
+
+  async function handleSubmit() {
+    if (isFormEmpty) return
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      const res = await fetch('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formData, sections: formSections }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Erro ao enviar.')
+      }
+
+      // Open WhatsApp
+      const encoded = encodeURIComponent(whatsappMessage)
+      window.open(`https://wa.me/${whatsappNumber}?text=${encoded}`, '_blank')
+
+      setShowSuccess(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao enviar. Tente novamente.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(whatsappMessage)
+      alert('Respostas copiadas para a área de transferência!')
+    } catch {
+      alert('Não foi possível copiar. Tente usar o botão de pré-visualizar.')
+    }
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white flex items-center justify-center">
+        <div className="text-teal-700 text-lg">Carregando...</div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white">
+      <div className="max-w-3xl mx-auto px-4 pb-32">
+        <IntroHeader />
+
+        <div className="sticky top-0 z-30 mb-6">
+          <ProgressBar formData={formData} sections={formSections} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        <div className="flex flex-col gap-6">
+          {formSections.map(section => (
+            <FormSectionCard
+              key={section.id}
+              section={section}
+              answer={formData[section.id] || { selectedOptions: [], textarea: '' }}
+              onChange={answer => updateSection(section.id, answer)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ))}
         </div>
-      </main>
+
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-center">
+            {error}
+          </div>
+        )}
+      </div>
+
+      <SubmitBar
+        onPreview={() => setShowPreview(true)}
+        onCopy={handleCopy}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        isFormEmpty={isFormEmpty}
+      />
+
+      {showPreview && (
+        <PreviewModal
+          message={whatsappMessage}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
+
+      {showSuccess && (
+        <SuccessMessage onClose={() => setShowSuccess(false)} />
+      )}
     </div>
-  );
+  )
 }
