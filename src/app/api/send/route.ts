@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
+import Nodemailer from 'nodemailer'
+import { MailtrapTransport } from 'mailtrap'
 import { FormData, FormSection } from '@/types/form'
 import { formatEmailHtml, formatEmailText } from '@/utils/formatMessage'
 
@@ -19,19 +20,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Formulário vazio.' }, { status: 400 })
     }
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
+    const transport = Nodemailer.createTransport(
+      MailtrapTransport({
+        token: process.env.MAILTRAP_TOKEN!,
+      })
+    )
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
-      to: process.env.EMAIL_TO,
+    await transport.sendMail({
+      from: {
+        address: process.env.EMAIL_FROM || 'hello@demomailtrap.com',
+        name: 'Rino sin Frontera',
+      },
+      to: [process.env.EMAIL_TO || ''],
       subject: 'Novo checklist preenchido – Site do Curso',
       html: formatEmailHtml(formData, sections),
       text: formatEmailText(formData, sections),
