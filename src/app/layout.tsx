@@ -10,7 +10,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Checklist – Rino sin Frontera',
   description:
-    'Formulário de checklist para levantamento de funcionalidades do site do curso médico Rino sin Frontera.',
+    'Formulario checklist para relevamiento de funcionalidades del sitio web del curso médico Rino sin Frontera.',
 }
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} h-full antialiased`}>
+    <html lang="es" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   )

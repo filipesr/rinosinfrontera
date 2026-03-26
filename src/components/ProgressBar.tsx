@@ -1,24 +1,26 @@
-import { FormData, FormSection } from '@/types/form'
+import { FormData } from '@/types/form'
+import { useI18n } from '@/i18n'
 
 interface ProgressBarProps {
   formData: FormData
-  sections: FormSection[]
+  totalSections: number
 }
 
-export function ProgressBar({ formData, sections }: ProgressBarProps) {
-  const filled = sections.filter(s => {
-    const a = formData[s.id]
-    return a && (a.selectedOptions.length > 0 || a.textarea.trim() !== '')
-  }).length
+export function ProgressBar({ formData, totalSections }: ProgressBarProps) {
+  const { t } = useI18n()
 
-  const percentage = Math.round((filled / sections.length) * 100)
+  const filled = Object.values(formData).filter(
+    a => a.selectedOptions.length > 0 || a.textarea.trim() !== ''
+  ).length
+
+  const percentage = Math.round((filled / totalSections) * 100)
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-4 md:p-6">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-slate-800/70">Progresso</span>
+        <span className="text-sm font-medium text-slate-800/70">{t.progress.label}</span>
         <span className="text-sm font-semibold text-teal-700">
-          {filled} de {sections.length} seções ({percentage}%)
+          {filled} {t.progress.of} {totalSections} {t.progress.sections} ({percentage}%)
         </span>
       </div>
       <div className="w-full h-3 bg-teal-50 rounded-full overflow-hidden">

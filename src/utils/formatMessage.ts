@@ -1,12 +1,15 @@
-import { FormData, FormSection } from '@/types/form'
+import { FormData } from '@/types/form'
+import { Translations } from '@/i18n/types'
+
+type TranslatedSection = Translations['sections'][number]
 
 function sectionHasContent(answer: { selectedOptions: string[]; textarea: string } | undefined): boolean {
   if (!answer) return false
   return answer.selectedOptions.length > 0 || answer.textarea.trim() !== ''
 }
 
-export function formatWhatsAppMessage(formData: FormData, sections: FormSection[]): string {
-  const lines: string[] = ['📋 *Checklist de Funcionalidades – Site do Curso*', '']
+export function formatWhatsAppMessage(formData: FormData, sections: TranslatedSection[], t: Translations): string {
+  const lines: string[] = [`📋 *${t.message.checklistTitle}*`, '']
 
   for (const section of sections) {
     const answer = formData[section.id]
@@ -27,17 +30,17 @@ export function formatWhatsAppMessage(formData: FormData, sections: FormSection[
     lines.push('')
   }
 
-  lines.push('_Enviado pelo formulário web._')
+  lines.push(`_${t.message.sentBy}_`)
   return lines.join('\n')
 }
 
-export function formatEmailHtml(formData: FormData, sections: FormSection[]): string {
-  const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+export function formatEmailHtml(formData: FormData, sections: TranslatedSection[], t: Translations): string {
+  const now = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
 
   let html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1E293B;">
       <div style="background: #0F766E; padding: 24px; border-radius: 12px 12px 0 0;">
-        <h1 style="color: white; margin: 0; font-size: 20px;">📋 Checklist de Funcionalidades – Site do Curso</h1>
+        <h1 style="color: white; margin: 0; font-size: 20px;">📋 ${t.message.checklistTitle}</h1>
         <p style="color: #CCFBF1; margin: 8px 0 0; font-size: 14px;">Rino sin Frontera • ${now}</p>
       </div>
       <div style="padding: 24px; background: #ffffff; border: 1px solid #E2E8F0; border-top: none; border-radius: 0 0 12px 12px;">
@@ -72,7 +75,7 @@ export function formatEmailHtml(formData: FormData, sections: FormSection[]): st
   html += `
       </div>
       <p style="text-align: center; color: #94A3B8; font-size: 12px; margin-top: 16px;">
-        Enviado pelo formulário web – Rino sin Frontera
+        ${t.message.sentBy} – Rino sin Frontera
       </p>
     </div>
   `
@@ -80,10 +83,10 @@ export function formatEmailHtml(formData: FormData, sections: FormSection[]): st
   return html
 }
 
-export function formatEmailText(formData: FormData, sections: FormSection[]): string {
-  const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+export function formatEmailText(formData: FormData, sections: TranslatedSection[], t: Translations): string {
+  const now = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
   const lines: string[] = [
-    'Checklist de Funcionalidades – Site do Curso',
+    t.message.checklistTitle,
     `Rino sin Frontera • ${now}`,
     '',
     '---',
@@ -110,6 +113,6 @@ export function formatEmailText(formData: FormData, sections: FormSection[]): st
   }
 
   lines.push('---')
-  lines.push('Enviado pelo formulário web.')
+  lines.push(t.message.sentBy)
   return lines.join('\n')
 }

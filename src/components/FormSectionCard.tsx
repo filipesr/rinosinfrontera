@@ -1,9 +1,18 @@
-import { FormSection, SectionAnswer } from '@/types/form'
+import { SectionAnswer } from '@/types/form'
 import { CheckboxGroup } from './CheckboxGroup'
 import { TextareaField } from './TextareaField'
 
+interface TranslatedSection {
+  id: string
+  title: string
+  description: string
+  options: string[]
+  textareaLabel: string
+  textareaPlaceholder: string
+}
+
 interface FormSectionCardProps {
-  section: FormSection
+  section: TranslatedSection
   answer: SectionAnswer
   onChange: (answer: Partial<SectionAnswer>) => void
 }
