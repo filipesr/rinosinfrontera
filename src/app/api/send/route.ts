@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import Nodemailer from 'nodemailer'
-import { MailtrapTransport } from 'mailtrap'
+import { MailtrapClient } from 'mailtrap'
 import { FormData } from '@/types/form'
 import { Translations } from '@/i18n/types'
 import { formatEmailHtml, formatEmailText } from '@/utils/formatMessage'
@@ -25,18 +24,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Formulario vacío.' }, { status: 400 })
     }
 
-    const transport = Nodemailer.createTransport(
-      MailtrapTransport({
-        token: process.env.MAILTRAP_TOKEN!,
-      })
-    )
+    const mailtrap = new MailtrapClient({
+      token: process.env.MAILTRAP_TOKEN!,
+    })
 
-    await transport.sendMail({
+    await mailtrap.send({
       from: {
-        address: process.env.EMAIL_FROM || 'hello@demomailtrap.com',
         name: 'Rino sin Frontera',
+        email: process.env.EMAIL_FROM || 'hello@demomailtrap.com',
       },
-      to: [process.env.EMAIL_TO || ''],
+      to: [{ email: process.env.EMAIL_TO || '' }],
       subject: 'Nuevo checklist completado – Sitio del Curso',
       html: formatEmailHtml(formData, sections, t),
       text: formatEmailText(formData, sections, t),
